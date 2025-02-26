@@ -3,18 +3,59 @@
 
 #include "MSTTestAux.h"
 #include "../data_structures/UFDS.h"
+#include <algorithm>
 
 /**
  * Auxiliary function to set the "path" field to make a spanning tree.
  */
 template <typename T>
 void dfsKruskalPath(Vertex<T> *v) {
+    v->setVisited(true);
+    for (auto e : v->getAdj()) {
+        if (e->isSelected() && !e->getDest()->isVisited()) {
+            e->getDest()->setPath(e);
+            dfsKruskalPath(e->getDest());
+        }
+    }
+}
 
+template <typename T>
+bool sortEdges(Edge<T> *v1, Edge<T> *v2) {
+    return v1->getWeight() < v2->getWeight();
 }
 
 template <typename T>
 std::vector<Vertex<T> *> kruskal(Graph<T> *g) {
+    UFDS ufds(g->getVertexSet().size());
+    {
+        int id =0;
+        for (auto u : g->getVertexSet()) {
+            u->setInfo(id++);
+        }
+    }
 
+    std::vector<Edge<T>*> edges;
+    for (Vertex<T> *v : g->getVertexSet()) {
+        for (Edge<T> *e : v->getAdj()) {
+            e->setSelected(false);
+            edges.push_back(e);
+        }
+    }
+    sort(edges.begin(), edges.end(), [](Edge<T> *v1, Edge<T> *v2)->bool{return v1->getWeight() < v2->getWeight();});
+    for (Edge<T>* e: edges) {
+        Vertex<T> * org = e->getOrig();
+        Vertex<T>* dest = e->getDest();
+        if (!ufds.isSameSet(org->getInfo(), dest->getInfo())) {
+            e->setSelected(true);
+            e->getReverse()->setSelected(true);
+            ufds.linkSets(org->getInfo(), dest->getInfo());
+        }
+    }
+    for (auto v: g->getVertexSet()) {
+        v->setVisited(false);
+    }
+    g->getVertexSet()[0]->setPath(nullptr);
+    dfsKruskalPath(g->getVertexSet()[0]);
     return g->getVertexSet();
 }
 

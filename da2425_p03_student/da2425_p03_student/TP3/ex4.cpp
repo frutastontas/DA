@@ -8,19 +8,47 @@ using namespace std;
 
 template <class T>
 bool relax(Edge<T> *edge) { // d[u] + w(u,v) < d[v]
-    // TODO
+    if (edge->getDest()->getDist() > edge->getWeight() + edge->getOrig()->getDist()) {
+        edge->getDest()->setDist(edge->getWeight() + edge->getOrig()->getDist());
+        edge->getDest()->setPath(edge);
+        return true;
+    }
     return false;
 }
 
 template <class T>
 void dijkstra(Graph<T> * g, const int &origin) {
-    // TODO
+    for (auto v : g->getVertexSet()) {
+        v->setDist(INF);
+        v->setPath(nullptr);
+    }
+    Vertex<T> *s = g->findVertex(origin);
+    s->setDist(0);
+    MutablePriorityQueue<Vertex<T>> pq;
+    for (auto v : g->getVertexSet()) {
+        pq.insert(v);
+    }
+
+    while (!pq.empty()) {
+        auto u = pq.extractMin();
+        for (auto e : u->getAdj()) {
+            if (relax(e))
+                pq.decreaseKey(e->getDest());
+        }
+    }
 }
 
 template <class T>
 static std::vector<T> getPath(Graph<T> * g, const int &origin, const int &dest) {
     std::vector<T> res;
-    // TODO
+    res.push_back(dest);
+    Edge<T>* cur = g->findVertex(dest)->getPath();
+    while (cur) {
+        res.push_back(cur->getOrig()->getInfo());
+        cur = cur->getOrig()->getPath();
+    }
+
+    std::reverse(res.begin(), res.end());
     return res;
 }
 
